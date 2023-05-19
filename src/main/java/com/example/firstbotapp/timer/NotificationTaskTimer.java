@@ -4,11 +4,12 @@ import com.example.firstbotapp.repositoty.NotificationTaskRepository;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
-
+@Component
 public class NotificationTaskTimer {
     private final NotificationTaskRepository notificationTaskRepository;
     private final TelegramBot telegramBot;

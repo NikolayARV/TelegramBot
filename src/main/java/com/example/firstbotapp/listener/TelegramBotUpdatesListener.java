@@ -10,14 +10,18 @@ import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.DataFormatException;
 
 import static org.apache.el.parser.ELParser.parse;
 
@@ -29,7 +33,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private final Pattern pattern = Pattern.compile(
             "(\\d{1,2}\\.\\d{1,2}\\.\\d{4} \\d{1,2}:\\d{2}) ([А-я\\d\\s.,!?:]+)"
     );
-
+private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
+        "dd.MM.yyyy HH:mm");
     public TelegramBotUpdatesListener(TelegramBot telegramBot, NotificationTaskService notificationTaskService) {
         this.telegramBot = telegramBot;
         this.notificationTaskService = notificationTaskService;
@@ -57,7 +62,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 } else if (text != null) {
                     Matcher matcher = pattern.matcher(text);
                     if (matcher.find()) {
-                        LocalDateTime dateTime = LocalDateTime.parse(matcher.group(1));
+                        LocalDateTime dateTime = parse(matcher.group(1));
                         if (Objects.isNull(dateTime)) {
                             sendMessage(chatId, "Некорректный формат даты и/или времени");
                         } else {
@@ -82,6 +87,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
 }
 
+    @Nullable
+    private LocalDateTime parse(String dateTime) {
+        try {
+            return LocalDateTime.parse(dateTime, dateTimeFormatter);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
     private void sendMessage(Long chatId, String message) {
         SendMessage sendMessage = new SendMessage(chatId, message);
         SendResponse sendResponse = telegramBot.execute(sendMessage);
